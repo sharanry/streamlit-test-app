@@ -1025,38 +1025,6 @@ watchdog = {version = ">=2.1.5,<6", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-connector-python (>=2.8.0)", "snowflake-snowpark-python[modin] (>=1.17.0)"]
 
 [[package]]
-name = "streamlit-notifications"
-version = "0.1"
-description = "A Streamlit library for sending browser notifications and alerts"
-optional = false
-python-versions = ">=3.8"
-files = []
-develop = false
-
-[package.dependencies]
-streamlit = ">=1.0.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/yunisguliyev/streamlit-notifications.git"
-reference = "HEAD"
-resolved_reference = "2972368b7497ca967bff4eb90c72c1f0ae423f09"
-
-[[package]]
-name = "streamlit-push-notifications"
-version = "0.1"
-description = "A Streamlit library for sending browser notifications and alerts"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "streamlit_push_notifications-0.1-py3-none-any.whl", hash = "sha256:d4692288271f7c0e50f9ebf574fd024d918a9e01d76e0847738333babd073e2a"},
-    {file = "streamlit_push_notifications-0.1.tar.gz", hash = "sha256:91d54f1e22841f733a2549e2b4c833c3209779773fdf9d1881293af3c1c4af3e"},
-]
-
-[package.dependencies]
-streamlit = ">=1.0.0"
-
-[[package]]
 name = "tenacity"
 version = "9.0.0"
 description = "Retry code until it succeeds"
@@ -1186,4 +1154,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "e7fece8ea160014bf7f38604a6cfdb86cc410d338685033db6bf312f2ffbcc03"
+content-hash = "66f4d454506b4cab135a6f2dd5a43f79b91ba05fd2211b3177028928579f50cd"
