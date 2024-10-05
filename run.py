@@ -65,22 +65,22 @@ with col1:
 
 # Notification system in the right column
 with col2:
-    st.subheader("Notifications")
-    if st.button("Send Notification"):
-        send_push("New message received!")
-        print("User action: Notification sent.")
-        st.success("Notification sent.")
-    with st.expander("Show/Hide Topics and Weights Chart"):
-        topics = ["Ukraine War", "Weather", "Cricket"]
-        weights = [0.5, 0.3, 0.2]
+    # st.subheader("Notifications")
+    # if st.button("Send Notification"):
+    #     send_push("New message received!")
+    #     print("User action: Notification sent.")
+    #     st.success("Notification sent.")
+    # with st.expander("Show/Hide Topics and Weights Chart"):
+    topics = ["Ukraine War", "Weather", "Cricket"]
+    weights = [0.5, 0.3, 0.2]
 
-        # Sort topics and weights from most weighed to least weighed
-        sorted_topics_weights = sorted(zip(weights, topics), reverse=True)
-        weights, topics = zip(*sorted_topics_weights)
+    # Sort topics and weights from most weighed to least weighed
+    sorted_topics_weights = sorted(zip(weights, topics), reverse=True)
+    weights, topics = zip(*sorted_topics_weights)
 
-        fig = px.bar(x=topics, y=weights, labels={'x': 'Topics', 'y': 'User Preference'}, title='Histogram of Topics and Weights', color=topics)
-        fig.update_layout(showlegend=False)
-        fig.update_layout(height=400)  # Set the height to be smaller
+    fig = px.bar(x=topics, y=weights, labels={'x': 'Topics', 'y': 'User Preference'}, title='Histogram of Topics and Weights', color=topics)
+    fig.update_layout(showlegend=False)
+    fig.update_layout(height=400)  # Set the height to be smaller
 
-        st.plotly_chart(fig)
+    st.plotly_chart(fig)
 
