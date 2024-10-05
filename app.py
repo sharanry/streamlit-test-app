@@ -28,12 +28,6 @@ llm = llm.ChatMistralAI(
     mistral_api_key=os.getenv("MISTRAL_API_KEY")
 )
 
-# Instantiating data sources
-sampler_map = {
-    recsys.SamplerType.GNEWS: recsys.GNewsSampler(),
-}
-
-
 # Set up the main layout
 col1, col2 = st.columns([3, 2])
 
