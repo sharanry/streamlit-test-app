@@ -33,7 +33,17 @@ col1, col2 = st.columns([3, 2])
 
 def clear_input():
     st.session_state.user_input = ""
-    
+
+rec = initial_state.new_recommender()
+
+@st.fragment(run_every=5)
+def run_recommendation_system():
+    item = rec.sample()
+    print(item)
+    st.session_state.thread.append(item.sample_result) 
+
+run_recommendation_system()
+
 with col1:
     st.header("AI Curator")
     # Display chat threads in a scrollable container
@@ -68,7 +78,8 @@ with col1:
                 elif "news" in message:
                     print("has news")
                     news = message["news"]
-                    extra_info = f"""<div><b>Title:</b> {news["title"]}</div>
+                    print(news)
+                    extra_info = f"""<div><b>Title:</b> <a href="{news.get('url', "")}" target="_blank">{news['title']}</a></div>
                     <div><b>Description:</b> {news["description"]}</div>
                     """
                 else:
