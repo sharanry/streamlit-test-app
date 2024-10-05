@@ -14,6 +14,8 @@ from backend import initial_state
 import streamlit as st
 import plotly.express as px
 
+st.set_page_config(layout="wide")
+
 st.session_state.thread = initial_state.thread
 st.session_state.topics = initial_state.topics
 print("User action: Chat history initialized.")
