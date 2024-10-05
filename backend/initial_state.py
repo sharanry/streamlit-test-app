@@ -33,6 +33,14 @@ thread = [
             "rain": "10%"
         }
     },
+    {
+        "role": "Assistant",
+        "message": "Here is the news for today: ",
+        "news": {
+            "title": "Ukraine News",
+            "description": "Ukraine is in a state of war with Russia."
+        }
+    }
 ]
 
 

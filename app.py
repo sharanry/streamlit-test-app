@@ -54,40 +54,40 @@ with col1:
             text = message["message"]
             if role == "User":
                 chat_container.markdown(f"""
-                <div style='text-align: right; background-color: #007bff; color: white; padding: 10px; margin: 10px; border-radius: 10px; max-width: 60%; float: right; clear: both;'>
+                <div style='text-align: right; background-color: rgba(0, 123, 255, 0.2); color: white; padding: 10px; margin: 10px; border-radius: 10px; max-width: 60%; float: right; clear: both;'>
                     <div><b>{role}</b></div>
                     <div>{text}</div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                chat_container.markdown(f"""
-                <div style='text-align: left; background-color: #dc3545; color: white; padding: 10px; margin: 10px; border-radius: 10px; max-width: 60%; float: left; clear: both;'>
-                    <div><b>{role}</b></div>
-                    <div>{text}</div>
-                </div>
-                """, unsafe_allow_html=True)
                 if "weather" in message:
                     print("has weather")
                     weather = message["weather"]
-                    weather_info = f"""
-                    <div>
-                        <img src="https://example.com/temperature_icon.png" alt="Temperature Icon" style="width:20px;height:20px;">
-                        Temperature: {weather['temperature']}°C
-                    </div>
-                    <div>
-                        <img src="https://example.com/humidity_icon.png" alt="Humidity Icon" style="width:20px;height:20px;">
-                        Humidity: {weather['humidity']}%
-                    </div>
-                    <div>
-                        <img src="https://example.com/wind_icon.png" alt="Wind Icon" style="width:20px;height:20px;">
-                        Wind: {weather['wind']}
-                    </div>
-                    <div>
-                        <img src="https://example.com/rain_icon.png" alt="Rain Icon" style="width:20px;height:20px;">
-                        Rain: {weather['rain']}
-                    </div>
+                    extra_info = f"""<div><b>Temperature:</b> {weather["temperature"]}°C</div>
+                    <div><b>Humidity:</b> {weather["humidity"]}%</div>
+                    <div><b>Wind:</b> {weather["wind"]}</div>
+                    <div><b>Rain:</b> {weather["rain"]}</div>
                     """
-                    chat_container.markdown(weather_info, unsafe_allow_html=True)
+                
+                elif "news" in message:
+                    print("has news")
+                    news = message["news"]
+                    extra_info = f"""<div><b>Title:</b> {news["title"]}</div>
+                    <div><b>Description:</b> {news["description"]}</div>
+                    """
+                else:
+                    extra_info = ""
+                full_info = f"""
+                <div style='text-align: left; background-color: rgba(220, 53, 69, 0.2); color: white; padding: 10px; margin: 10px; border-radius: 10px; max-width: 60%; float: left; clear: both;'>
+                    <div><b>{role}</b></div>
+                    <div>{text}</div>
+                    """+extra_info+"""
+                </div>
+                """
+                print(full_info)
+                chat_container.markdown(full_info, unsafe_allow_html=True)
+    
+                
                 
         chat_container.markdown("</div>", unsafe_allow_html=True)
 
