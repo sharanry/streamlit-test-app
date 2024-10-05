@@ -185,8 +185,6 @@ class Recommender:
             SamplerType.WEATHER: WeatherSampler()
         }
 
-    def feedback_history
-
     async def sample(self):
         # Select an arm using the bandit algorithm
         selected_arm = self.bandit.select_arm()
