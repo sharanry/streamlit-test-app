@@ -15,7 +15,7 @@ class Sampler:
     def __init__(self):
         raise NotImplementedError()
 
-    async def sample(self, params: Dict[str, Union[str, float]] = {}):
+    def sample(self, params: Dict[str, Union[str, float]] = {}):
         """
         Sample function that processes the input parameter string and interacts with the API.
 
@@ -33,14 +33,16 @@ class GNewsSampler(Sampler):
         # Instantiate the Google News client once
         self.google_news = GNews(max_results=max_results)
 
-    async def sample(self, params: Dict[str, Union[str, float]] = {'query': 'World News'}):
+    def sample(self, params: Dict[str, Union[str, float]] = {'query': 'World News'}):
         """
         Get news articles based on the 'query' parameter from the params dictionary.
         """
         query = params.get('query', '')
-        news = self.google_news.get_news(query)
+        print(query)
+        news = self.google_news.get_news(query['topic'])
+
         if news:
-            return news[0]  # Return the first news article
+            return {"role": "AI", "message": "Here is some news for you", "news": news[0]}  # Return the first news article
         else:
             return {"error": "No news articles found"}
 
@@ -49,7 +51,7 @@ class XKCDSampler(Sampler):
     def __init__(self):
         pass  # No need for an API key
 
-    async def sample(self, params: Dict[str, Union[str, float]] = {}):
+    def sample(self, params: Dict[str, Union[str, float]] = {}):
         """
         Get a random XKCD comic. The 'params' dictionary is ignored as no parameters are required.
         """
@@ -59,15 +61,14 @@ class XKCDSampler(Sampler):
 
 class WeatherSampler(Sampler):
     def __init__(self):
-        # Create the Python Weather client once
-        self.client = python_weather.Client(unit=python_weather.METRIC)
-
-    async def sample(self, params: Dict[str, Union[str, float]] = {'location': 'London'}):
+        pass
+    async def get_weather(self, params: Dict[str, Union[str, float]] = {'location': 'London'}):
         """
         Fetch weather data for the given location from the 'location' parameter in the params dictionary.
         """
+        client = python_weather.Client(unit=python_weather.METRIC)
         location = params.get('location', '')
-        weather = await self.client.get(location)
+        weather = (client.get(location))
         # Assuming daily_forecasts is a generator, get the next 3 days
         daily = weather.daily_forecasts
         weather_report = "Weather Forecast\n"
@@ -79,12 +80,8 @@ class WeatherSampler(Sampler):
                 weather_report += f" --> {hourly!r}"
         return weather_report
 
-    async def close(self):
-        """
-        Close the client properly (if necessary). Use this when you're done with the instance.
-        """
-        await self.client.close()
-
+    def sample(self, params: Dict[str, Union[str, float]] = {'location': 'London'}):
+        return asyncio.run(self.get_weather(params))
 
 class Arm:
     def __init__(self, name: str, params: Dict[str, Union[str, float]], sampler_type: Sampler, init_score=5, decay_rate=0.1):
@@ -115,7 +112,7 @@ class Arm:
 
 
 class Bandit:
-    def __init__(self, arms: List[Arm], alpha: float, base_arms: List[Arm] = []):
+    def __init__(self, arms: List[Arm]=[], alpha: float=2.0, base_arms: List[Arm] = []):
         """
         Initializes the Bandit algorithm with a set of arms using exponential sampling based on score.
 
@@ -168,12 +165,11 @@ class SamplerType(Enum):
 
 
 class Item:
-    def __init__(self, arm: Arm, sample_result: dict):
-        self.arm = arm
+    def __init__(self, sample_result: dict):
         self.sample_result = sample_result
 
     def __repr__(self):
-        return f"Item(arm={self.arm.name}, score={self.arm.score}, sample_result={self.sample_result})"
+        return f"Item(sample_result={self.sample_result})"
 
 
 class Recommender:
@@ -185,7 +181,13 @@ class Recommender:
             SamplerType.WEATHER: WeatherSampler()
         }
 
-    async def sample(self):
+    def add_arm(self, arm: Arm):
+        self.bandit.arms.append(arm)
+
+    def remove_arm(self, arm_name: str):
+        self.bandit.arms = [arm for arm in self.bandit.arms if arm.name != arm_name]
+
+    def sample(self):
         # Select an arm using the bandit algorithm
         selected_arm = self.bandit.select_arm()
         selected_arm.sample_arm()
@@ -194,6 +196,6 @@ class Recommender:
         sampler_type = selected_arm.sampler_type
         sampler = self.samplers[sampler_type]
 
-        sample = await sampler.sample(selected_arm.params)
+        sample = sampler.sample(selected_arm.params)
 
-        return Item(selected_arm, sample)
+        return Item(sample)
