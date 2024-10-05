@@ -85,8 +85,9 @@ class WeatherSampler(Sampler):
         """
         await self.client.close()
 
+
 class Arm:
-    def __init__(self, name:str, params: Dict[str, Union[str,float]], sampler_type: Sampler, init_score=5, decay_rate=0.1):
+    def __init__(self, name: str, params: Dict[str, Union[str, float]], sampler_type: Sampler, init_score=5, decay_rate=0.1):
         """
         Initializes an Arm with a name, an initial score, and a decay rate.
 
@@ -112,8 +113,9 @@ class Arm:
         """String representation of the Arm object."""
         return f"Arm {self.name} has score {self.score:.2f} and has been pulled {self.pulls} times"
 
+
 class Bandit:
-    def __init__(self, arms: List[Arm], alpha: float):
+    def __init__(self, arms: List[Arm], alpha: float, base_arms: List[Arm] = []):
         """
         Initializes the Bandit algorithm with a set of arms using exponential sampling based on score.
 
@@ -122,15 +124,20 @@ class Bandit:
             alpha (float): Exponential scaling factor for sampling probabilities.
         """
         self.arms = arms  # A list of Arm objects
+        self.base_arms = base_arms
         self.alpha = alpha  # Scaling factor for exponential distribution
+
+    def get_valid_arms(self):
+        return self.arms+self.base_arms
 
     def get_probabilities(self) -> List[float]:
         """Calculates the probabilities of the arms based on their scores following an exponential distribution."""
-        valid_scores = [arm.score**self.alpha for arm in self.arms if arm.score >= 4]
-        
+        valid_scores = [arm.score **
+                        self.alpha for arm in self.get_valid_arms() if arm.score >= 4]
+
         if not valid_scores:
             raise ValueError("No arms with score >= 4 to sample from.")
-        
+
         total_score = sum(valid_scores)
         probabilities = [score/total_score for score in valid_scores]
         return probabilities
@@ -138,23 +145,27 @@ class Bandit:
     def select_arm(self) -> Arm:
         """Selects and returns the arm to pull based on the exponential distribution of the scores."""
         # Filter out arms with scores less than 4
-        valid_arms = [arm for arm in self.arms if arm.score >= 4]
-        
+        valid_arms = [arm for arm in self.get_valid_arms() if arm.score >= 4]
+
         if not valid_arms:
-            raise ValueError("No valid arms with score >= 4 available for selection.")
+            raise ValueError(
+                "No valid arms with score >= 4 available for selection.")
 
         probabilities = self.get_probabilities()
-        selected_arm = random.choices(valid_arms, weights=probabilities, k=1)[0]
+        selected_arm = random.choices(
+            valid_arms, weights=probabilities, k=1)[0]
         return selected_arm
 
     def pull_and_decay(self, arm: Arm):
         """Pulls the arm and applies the decay towards 5."""
         arm.sample_arm()
 
+
 class SamplerType(Enum):
     GNEWS = 1
     XKCD = 2
     WEATHER = 3
+
 
 class Item:
     def __init__(self, arm: Arm, sample_result: dict):
@@ -165,10 +176,16 @@ class Item:
         return f"Item(arm={self.arm.name}, score={self.arm.score}, sample_result={self.sample_result})"
 
 
-class BanditManager:
-    def __init__(self, bandit: Bandit, samplers: dict):
-        self.bandit = bandit
-        self.samplers = samplers
+class Recommender:
+    def __init__(self, base_arms=List[Arm]):
+        self.bandit = Bandit(base_arms=base_arms)
+        self.samplers = {
+            SamplerType.GNEWS: GNewsSampler(),
+            SamplerType.XKCD: XKCDSampler(),
+            SamplerType.WEATHER: WeatherSampler()
+        }
+
+    def feedback_history
 
     async def sample(self):
         # Select an arm using the bandit algorithm

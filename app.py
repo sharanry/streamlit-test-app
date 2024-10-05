@@ -31,9 +31,6 @@ sampler_map = {
     recsys.SamplerType.GNEWS: recsys.GNewsSampler(),
 }
 
-st.set_page_config(layout="wide")
-
-
 
 # Set up the main layout
 col1, col2 = st.columns([3, 2])
@@ -118,8 +115,6 @@ with col1:
     if st.session_state.user_input and st.session_state.user_input.endswith('\n'):
         send_message()
     st.markdown("</div>", unsafe_allow_html=True)
-
-
 
 # Notification system in the right column
 with col2:

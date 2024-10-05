@@ -1,9 +1,11 @@
 from datetime import time
 
+from backend.recsys import Arm, Bandit, Recommender, SamplerType
+
 thread = [
     {
         "role": "Assistant",
-        "message": "Hello! I'm your personal assistant. I can help you with keeping track of news, weather, tube status, and more! Let me know how I can assist you!"
+        "message": "Hello! I'm your personal assistant. I can help you with keeping track of news, share memes, and even send weather updates! Let me know how I can assist you!"
     },
     {
         "role": "User",
@@ -33,6 +35,7 @@ thread = [
     },
 ]
 
+
 memory = [
     ""
 ]
@@ -50,3 +53,13 @@ topics = [{
     "weight": 5,
     "time": time(hour=8)
 }]
+
+
+def new_recommender():
+    # initialize arms and bandit
+    arms = []
+    for i, topic in enumerate(topics):
+        arms.append(Arm(f"Arm_{i}({topic})", {'query': topic},
+                    sampler_type=SamplerType.GNEWS, init_score=4.0))
+    rec = Recommender(arms)
+    return rec
