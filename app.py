@@ -5,6 +5,7 @@ from backend import recsys
 from backend import llm
 import os
 import sys
+import asyncio
 
 testdir = os.path.dirname(__file__)
 srcdir = './frontend'
@@ -37,71 +38,45 @@ def clear_input():
 
 rec = initial_state.new_recommender()
 
+# @st.fragment(run_every=5)
+async def run_recommendation_system():
+    while True:
+        await asyncio.sleep(5)
+        print("Running recommendation system")
+        st.session_state.thread.append({"role": "AI", "message": "test"})
+        print(len(st.session_state.thread))
+        st.rerun(scope="chat")
+    # item = rec.sample()
+    # print(item)
+    # st.session_state.thread.append(item) 
 
-@st.fragment(run_every=5)
-def run_recommendation_system():
-    item = rec.sample()
-    print(item)
-    st.session_state.thread.append(item)
-
-
-run_recommendation_system()
 
 with col1:
+    st.session_state.thread = initial_state.thread
+    st.session_state.topics = initial_state.topics
     st.header("AI Curator")
     # Display chat threads in a scrollable container
-    chat_container = st.container(key="chat")
-    with chat_container:
-        chat_container.markdown(
-            """
-            <div style='height: 20vh; overflow-y: hidden; position:fixed;'>
-            """,
-            unsafe_allow_html=True
-        )
-        for item in st.session_state.thread:
-            print(type(item), isinstance(item, recsys.ChatItem))
-            # Initialize an empty string for the content
-            content = ""
+    chat_container = st.container(key="chat", height=400, border=False)
 
-            if isinstance(item, recsys.ChatItem):
-                content = f"""
-                <div style='text-align: right; background-color: rgba(0, 123, 255, 0.2); color: white; padding: 10px; margin: 10px; border-radius: 10px; max-width: 60%; float: right; clear: both;'>
-                    <div><b>{item.sender}</b></div>
-                    <div>{item.message}</div>
-                </div>
-                """
+    @st.fragment
+    def display_chat():
+        with chat_container:
+            for message in st.session_state.thread:
+                role = message["role"]
+                text = message["message"]
+                
+                if isinstance(item, recsys.GNewsItem):
+                    news = message["news"]
+                    with st.chat_message(item.sender, avatar="🗞️"):
+                        st.markdown(item.title)
+                        st.markdown(f"""**[{item.title}]({""})**
+                        {item.description}
+                        """)
+                elif isinstance(item, recsys.ChatItem):
+                    with st.chat_message(role):
+                        st.markdown(text)
 
-            elif isinstance(item, recsys.XKCDItem):
-                print("has xkcd")
-                news = item.title
-                print(news)
-                content = f"""
-                <div style='text-align: left; background-color: rgba(40, 167, 69, 0.2); color: white; padding: 10px; margin: 10px; border-radius: 10px; max-width: 60%; float: left; clear: both;'>
-                    <div><b>Title:</b> <a href="{item.link}" target="_blank">{item.title}</a></div>
-                    <div><b>Description:</b> {item.alt_text}</div>
-                </div>
-                """
-
-            elif isinstance(item, recsys.GNewsItem):
-                extra_info = ""
-                content = f"""
-                <div style='text-align: left; background-color: rgba(220, 53, 69, 0.2); color: white; padding: 10px; margin: 10px; border-radius: 10px; max-width: 60%; float: left; clear: both;'>
-                    <div><b>{item.title}</b></div>
-                    <div>{item.description}</div>
-                </div>
-                """
-
-            # Call chat_container.markdown once, after constructing the content
-            if content:
-                chat_container.markdown(content, unsafe_allow_html=True)
-
-        chat_container.markdown("</div>", unsafe_allow_html=True)
-
-    # Input for new messages at the footer of the page
-    # Footer section for input and send button
-    st.markdown("<div style='position: fixed; bottom: 0; height: 20%; width: 75%;'>",
-                unsafe_allow_html=True)
-
+    display_chat()
     @st.fragment
     def send_message():
         user_input = st.session_state.user_input
@@ -111,17 +86,9 @@ with col1:
             st.session_state.thread.append(message)
             print(f"User action: Message sent - {user_input}")
             # clear_input()
+    
+    st.chat_input("Talk to your AI Curator", key="user_input", on_submit=send_message)
 
-    st.text_input("Type your message here:", key="user_input")
-
-    if st.button("Send", key="send_button"):
-        send_message()
-        # st.session_state.user_input = ""
-        st.rerun()
-
-    if st.session_state.user_input and st.session_state.user_input.endswith('\n'):
-        send_message()
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # Notification system in the right column
 with col2:
@@ -144,3 +111,9 @@ with col2:
     fig.update_layout(height=400)  # Set the height to be smaller
 
     st.plotly_chart(fig)
+<<<<<<< HEAD
+=======
+
+
+# asyncio.run(run_recommendation_system())
+>>>>>>> b0bcb86 (sharan updates)
