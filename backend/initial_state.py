@@ -1,46 +1,22 @@
 from datetime import time
 
-from backend.recsys import Arm, Bandit, Recommender, SamplerType
+from backend.recsys import Arm, ChatItem, Recommender, SamplerType
 
+# Convert the thread into ChatItem objects
 thread = [
-    {
-        "role": "Assistant",
-        "message": "Hello! I'm your personal assistant. I can help you with keeping track of news, share memes, and even send weather updates! Let me know how I can assist you!"
-    },
-    {
-        "role": "User",
-        "message": "Give me a breif on the weather every morning."
-    },
-    {
-        "role": "Assistant",
-        "message": "I will send you a message every morning with the weather. "
-    },
-    {
-        "role": "User",
-        "message": "I am also interested in news on Ukraine."
-    },
-    {
-        "role": "Assistant",
-        "message": "I will send you a message whenever there is important news on Ukraine."
-    },
-    {
-        "role": "Assistant",
-        "message": "Here is the weather for today: ",
-        "weather": {
-            "temperature": 10,
-            "humidity": 50,
-            "wind": "10 km/h",
-            "rain": "10%"
-        }
-    },
-    {
-        "role": "Assistant",
-        "message": "Here is the news for today: ",
-        "news": {
-            "title": "Ukraine News",
-            "description": "Ukraine is in a state of war with Russia."
-        }
-    }
+    ChatItem({"sender": "Assistant", "message": "Hello! I'm your personal assistant. I can help you with keeping track of news, share memes, and even send weather updates! Let me know how I can assist you!"}),
+    ChatItem(
+        {"sender": "User", "message": "Give me a brief on the weather every morning."}),
+    ChatItem({"sender": "Assistant",
+             "message": "I will send you a message every morning with the weather."}),
+    ChatItem(
+        {"sender": "User", "message": "I am also interested in news on Ukraine."}),
+    ChatItem({"sender": "Assistant",
+             "message": "I will send you a message whenever there is important news on Ukraine."}),
+    ChatItem({"sender": "Assistant",
+             "message": "Here is the weather for today: Temperature: 10°C, Humidity: 50%, Wind: 10 km/h, Rain: 10%."}),
+    ChatItem({"sender": "Assistant",
+             "message": "Here is the news for today: Ukraine News - Ukraine is in a state of war with Russia."})
 ]
 
 
@@ -69,5 +45,7 @@ def new_recommender():
     for i, topic in enumerate(topics):
         arms.append(Arm(f"Arm_{i}({topic})", {'query': topic},
                     sampler_type=SamplerType.GNEWS, init_score=4.0))
+
+    arms.append(Arm('xkcd arm', {}, sampler_type=SamplerType.XKCD, init_score=7.0))
     rec = Recommender(arms)
     return rec

@@ -4,7 +4,6 @@ from tfl.api_token import ApiToken
 import xkcd
 from typing import Dict, Union, List
 from gnews import GNews
-import python_weather
 import random
 import numpy as np
 from typing import List
@@ -41,10 +40,10 @@ class GNewsSampler(Sampler):
         print(query)
         news = self.google_news.get_news(query['topic'])
 
-        if news:
-            return {"role": "AI", "message": "Here is some news for you", "news": news[0]}  # Return the first news article
+        if news and news[0]:
+            return GNewsItem(news[0])
         else:
-            return {"error": "No news articles found"}
+            raise Exception("No GNews articles found.")
 
 
 class XKCDSampler(Sampler):
@@ -56,32 +55,8 @@ class XKCDSampler(Sampler):
         Get a random XKCD comic. The 'params' dictionary is ignored as no parameters are required.
         """
         comic = xkcd.getRandomComic()
-        return vars(comic)  # Return the comic data as a dictionary
+        return XKCDItem(vars(comic))  # Return the comic data
 
-
-class WeatherSampler(Sampler):
-    def __init__(self):
-        pass
-    async def get_weather(self, params: Dict[str, Union[str, float]] = {'location': 'London'}):
-        """
-        Fetch weather data for the given location from the 'location' parameter in the params dictionary.
-        """
-        client = python_weather.Client(unit=python_weather.METRIC)
-        location = params.get('location', '')
-        weather = (client.get(location))
-        # Assuming daily_forecasts is a generator, get the next 3 days
-        daily = weather.daily_forecasts
-        weather_report = "Weather Forecast\n"
-        # get the weather forecast for a few days
-        for daily in weather:
-            weather_report += f"{daily}\n"
-            # hourly forecasts
-            for hourly in daily:
-                weather_report += f" --> {hourly!r}"
-        return weather_report
-
-    def sample(self, params: Dict[str, Union[str, float]] = {'location': 'London'}):
-        return asyncio.run(self.get_weather(params))
 
 class Arm:
     def __init__(self, name: str, params: Dict[str, Union[str, float]], sampler_type: Sampler, init_score=5, decay_rate=0.1):
@@ -112,7 +87,7 @@ class Arm:
 
 
 class Bandit:
-    def __init__(self, arms: List[Arm]=[], alpha: float=2.0, base_arms: List[Arm] = []):
+    def __init__(self, arms: List[Arm] = [], alpha: float = 2.0, base_arms: List[Arm] = []):
         """
         Initializes the Bandit algorithm with a set of arms using exponential sampling based on score.
 
@@ -161,15 +136,62 @@ class Bandit:
 class SamplerType(Enum):
     GNEWS = 1
     XKCD = 2
-    WEATHER = 3
 
 
 class Item:
     def __init__(self, sample_result: dict):
         self.sample_result = sample_result
 
+    def __str__(self):
+        return str(self.sample_result)
+
     def __repr__(self):
         return f"Item(sample_result={self.sample_result})"
+
+
+class ChatItem(Item):
+    def __init__(self, sample_result: dict):
+        self.sender = sample_result.get("sender", "Unknown sender")
+        self.message = sample_result.get("message", "no message")
+
+    def __str__(self):
+        return f"{self.sender} send a message: {self.message}"
+
+
+class GNewsItem(Item):
+    def __init__(self, sample_result: dict = {}):
+        self.title = sample_result.get("title", "An untitled article")
+        self.description = sample_result.get(
+            "description", "No description available")
+        self.date = sample_result.get("published date", "an unknown date")
+        self.publisher_name = sample_result.get(
+            "publisher", {}).get("title", "an unknown publisher")
+
+    def __str__(self):
+        return (
+            f"'{self.title}', published by {self.publisher_name} on {
+                self.date}, covers the following: {self.description}."
+        )
+
+
+class XKCDItem(Item):
+    def __init__(self, sample_result: dict = {}):
+        self.number = sample_result.get("number", "an unknown number")
+        self.title = sample_result.get("title", "An untitled comic")
+        self.alt_text = sample_result.get("altText", "No alt text available")
+        self.image_link = sample_result.get("imageLink", "No image available")
+        self.image_name = sample_result.get(
+            "imageName", "No image name available")
+        self.link = sample_result.get("link", "No link available")
+
+    def __str__(self):
+        return (
+            f"XKCD comic #{self.number}, titled '{
+                self.title}', can be viewed at {self.link}. "
+            f"The comic features an image named '{
+                self.image_name}', available at {self.image_link}. "
+            f"Alt text: '{self.alt_text}'."
+        )
 
 
 class Recommender:
@@ -178,16 +200,16 @@ class Recommender:
         self.samplers = {
             SamplerType.GNEWS: GNewsSampler(),
             SamplerType.XKCD: XKCDSampler(),
-            SamplerType.WEATHER: WeatherSampler()
         }
 
     def add_arm(self, arm: Arm):
         self.bandit.arms.append(arm)
 
     def remove_arm(self, arm_name: str):
-        self.bandit.arms = [arm for arm in self.bandit.arms if arm.name != arm_name]
+        self.bandit.arms = [
+            arm for arm in self.bandit.arms if arm.name != arm_name]
 
-    def sample(self):
+    def sample(self) -> Item:
         # Select an arm using the bandit algorithm
         selected_arm = self.bandit.select_arm()
         selected_arm.sample_arm()
@@ -198,4 +220,4 @@ class Recommender:
 
         sample = sampler.sample(selected_arm.params)
 
-        return Item(sample)
+        return sample
