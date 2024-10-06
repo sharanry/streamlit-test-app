@@ -1,6 +1,6 @@
 from datetime import time
 
-from backend.recsys import Arm, ChatItem, GNewsItem, XKCDItem, Recommender, SamplerType
+from recsys import Arm, ChatItem, GNewsItem, XKCDItem, Recommender, SamplerType
 
 # Convert the thread into ChatItem objects
 thread = [
@@ -52,10 +52,10 @@ def new_recommender():
     # initialize arms and bandit
     arms = []
     for i, topic in enumerate(topics):
-        arms.append(Arm(f"Arm_{i}({topic})", {'query': topic},
+        arms.append(Arm(f"Default GNews Topic{i}", {'query': topic["topic"]},
                     sampler_type=SamplerType.GNEWS, init_score=4.0))
 
-    arms.append(Arm('xkcd arm', {}, sampler_type=SamplerType.XKCD, init_score=5.0))
-    arms.append(Arm('arxiv arm', {'topic': 'quantum computing'}, sampler_type=SamplerType.ARXIV, init_score=5.0))
+    arms.append(Arm('Default XKCD', {}, sampler_type=SamplerType.XKCD, init_score=5.0))
+    arms.append(Arm('Default Arxiv Topic', {'topic': 'neural networks'}, sampler_type=SamplerType.ARXIV, init_score=5.0))
     rec = Recommender(arms)
     return rec

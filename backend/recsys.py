@@ -11,6 +11,12 @@ from enum import Enum
 import arxiv
 
 
+class SamplerType(Enum):
+    GNEWS = 1
+    XKCD = 2
+    ARXIV = 3
+
+
 class Item:
     def __init__(self, sample_result: dict):
         self.sample_result = sample_result
@@ -244,12 +250,6 @@ class Bandit:
         arm.sample_arm()
 
 
-class SamplerType(Enum):
-    GNEWS = 1
-    XKCD = 2
-    ARXIV = 3
-
-
 class Recommender:
     def __init__(self, base_arms=List[Arm]):
         self.bandit = Bandit(base_arms=base_arms)
@@ -278,3 +278,39 @@ class Recommender:
         sample = sampler.sample(selected_arm.params)
 
         return sample
+
+    def get_arms(self) -> dict:
+        """
+        Returns a dictionary representation of all current arms and their configurations.
+        """
+        arms_config = []
+        for arm in self.bandit.get_valid_arms():
+            arms_config.append({
+                'name': arm.name,
+                'params': arm.params,
+                'sampler_type': arm.sampler_type,
+                'score': arm.score,
+            })
+        return {'arms': arms_config}
+
+    def update_arms(self, new_arms_config: dict) -> bool:
+        """
+        Update the current set of arms based on the provided configuration.
+
+        Args:
+            new_arms_config (dict): Dictionary containing the new configuration of arms.
+
+        Returns:
+            bool: True if the update was applied successfully, False otherwise.
+        """
+        new_arms = []
+        for arm_config in new_arms_config.get('arms', []):
+            if arm_config["name"] not in [arm.name for arm in self.bandit.base_arms]:
+                new_arm = Arm(
+                    name=arm_config['name'],
+                    params=arm_config['params'],
+                    sampler_type=SamplerType[arm_config['sampler_type']],
+                    init_score=arm_config['score']
+                )
+                new_arms.append(new_arm)
+        self.bandit.arms = new_arms
