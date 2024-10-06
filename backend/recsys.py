@@ -122,8 +122,7 @@ class GNewsSampler(Sampler):
         Get news articles based on the 'query' parameter from the params dictionary.
         """
         query = params.get('query', '')
-        print(query)
-        news = self.google_news.get_news(query['topic'])
+        news = self.google_news.get_news(query)
 
         if news:
             return GNewsItem(random.choice(news))
@@ -304,6 +303,7 @@ class Recommender:
             bool: True if the update was applied successfully, False otherwise.
         """
         new_arms = []
+        print(new_arms_config)
         for arm_config in new_arms_config.get('arms', []):
             if arm_config["name"] not in [arm.name for arm in self.bandit.base_arms]:
                 new_arm = Arm(
@@ -313,4 +313,9 @@ class Recommender:
                     init_score=arm_config['score']
                 )
                 new_arms.append(new_arm)
+            else:
+                base_arm = [arm for arm in self.bandit.base_arms if arm.name == arm_config['name']][0]
+                base_arm.params = arm_config['params']
+                base_arm.sampler_type = SamplerType[arm_config['sampler_type']]
+                base_arm.score = arm_config['score']
         self.bandit.arms = new_arms
