@@ -46,6 +46,7 @@ def new_recommender():
         arms.append(Arm(f"Arm_{i}({topic})", {'query': topic},
                     sampler_type=SamplerType.GNEWS, init_score=4.0))
 
-    arms.append(Arm('xkcd arm', {}, sampler_type=SamplerType.XKCD, init_score=7.0))
+    arms.append(Arm('xkcd arm', {}, sampler_type=SamplerType.XKCD, init_score=5.0))
+    arms.append(Arm('arxiv arm', {'topic': 'quantum computing'}, sampler_type=SamplerType.ARXIV, init_score=5.0))
     rec = Recommender(arms)
     return rec

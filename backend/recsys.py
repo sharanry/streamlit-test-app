@@ -8,6 +8,84 @@ import random
 import numpy as np
 from typing import List
 from enum import Enum
+import arxiv
+
+
+class Item:
+    def __init__(self, sample_result: dict):
+        self.sample_result = sample_result
+
+    def __str__(self):
+        return str(self.sample_result)
+
+    def __repr__(self):
+        return f"Item(sample_result={self.sample_result})"
+
+
+class ChatItem(Item):
+    def __init__(self, sample_result: dict):
+        self.sender = sample_result.get("sender", "Unknown sender")
+        self.message = sample_result.get("message", "no message")
+
+    def __str__(self):
+        return f"{self.sender} send a message: {self.message}"
+
+
+class GNewsItem(Item):
+    def __init__(self, sample_result: dict = {}):
+        self.title = sample_result.get("title", "An untitled article")
+        self.description = sample_result.get(
+            "description", "No description available")
+        self.date = sample_result.get("published date", "an unknown date")
+        self.publisher_name = sample_result.get(
+            "publisher", {}).get("title", "an unknown publisher")
+
+    def __str__(self):
+        return (
+            f"'{self.title}', published by {self.publisher_name} on {
+                self.date}, covers the following: {self.description}."
+        )
+
+
+class XKCDItem(Item):
+    def __init__(self, sample_result: dict = {}):
+        self.number = sample_result.get("number", "an unknown number")
+        self.title = sample_result.get("title", "An untitled comic")
+        self.alt_text = sample_result.get("altText", "No alt text available")
+        self.image_link = sample_result.get("imageLink", "No image available")
+        self.image_name = sample_result.get(
+            "imageName", "No image name available")
+        self.link = sample_result.get("link", "No link available")
+
+    def __str__(self):
+        return (
+            f"XKCD comic #{self.number}, titled '{
+                self.title}', can be viewed at {self.link}. "
+            f"The comic features an image named '{
+                self.image_name}', available at {self.image_link}. "
+            f"Alt text: '{self.alt_text}'."
+        )
+
+
+class ArxivItem:
+    def __init__(self, paper):
+        self.title = paper.title or "Untitled paper"
+        self.authors = ", ".join(
+            [author.name for author in paper.authors]) or "Unknown authors"
+        self.summary = paper.summary or "No summary available"
+        self.published = paper.published.strftime(
+            "%B %d, %Y") if paper.published else "Unknown publication date"
+        self.pdf_url = paper.pdf_url or "No PDF available"
+        self.arxiv_url = paper.entry_id or "No arXiv URL available"
+
+    def __str__(self):
+        return (
+            f"'{self.title}' was authored by {
+                self.authors} and published on {self.published}. "
+            f"Here is a brief summary: {self.summary[:200]}... "
+            f"Read more: {self.arxiv_url} or download the PDF at {
+                self.pdf_url}."
+        )
 
 
 class Sampler:
@@ -28,7 +106,7 @@ class Sampler:
 
 
 class GNewsSampler(Sampler):
-    def __init__(self, max_results=1):
+    def __init__(self, max_results=50):
         # Instantiate the Google News client once
         self.google_news = GNews(max_results=max_results)
 
@@ -40,8 +118,8 @@ class GNewsSampler(Sampler):
         print(query)
         news = self.google_news.get_news(query['topic'])
 
-        if news and news[0]:
-            return GNewsItem(news[0])
+        if news:
+            return GNewsItem(random.choice(news))
         else:
             raise Exception("No GNews articles found.")
 
@@ -56,6 +134,38 @@ class XKCDSampler(Sampler):
         """
         comic = xkcd.getRandomComic()
         return XKCDItem(vars(comic))  # Return the comic data
+
+
+class ArxivSampler(Sampler):
+    def __init__(self):
+        # Initialize the arxiv client
+        self.client = arxiv.Client()
+
+    def sample(self, params: Dict[str, Union[str, float]] = {}):
+        """
+        Get a random paper from Arxiv. The params has the topic of interest as 'topic'.
+        """
+        # Extract the topic from params, default to "artificial intelligence" if not provided
+        topic = params.get('topic', 'artificial intelligence')
+
+        # Define the search query for Arxiv
+        search = arxiv.Search(
+            query=topic,
+            max_results=100,  # Fetch up to 100 papers to allow for random sampling
+            sort_by=arxiv.SortCriterion.SubmittedDate
+        )
+
+        # Get all results from the search
+        all_results = list(self.client.results(search))
+
+        if not all_results:
+            return f"No papers found for the topic: {topic}"
+
+        # Select a random paper from the search results
+        random_paper = random.choice(all_results)
+
+        # Return an ArxivItem
+        return ArxivItem(random_paper)
 
 
 class Arm:
@@ -136,62 +246,7 @@ class Bandit:
 class SamplerType(Enum):
     GNEWS = 1
     XKCD = 2
-
-
-class Item:
-    def __init__(self, sample_result: dict):
-        self.sample_result = sample_result
-
-    def __str__(self):
-        return str(self.sample_result)
-
-    def __repr__(self):
-        return f"Item(sample_result={self.sample_result})"
-
-
-class ChatItem(Item):
-    def __init__(self, sample_result: dict):
-        self.sender = sample_result.get("sender", "Unknown sender")
-        self.message = sample_result.get("message", "no message")
-
-    def __str__(self):
-        return f"{self.sender} send a message: {self.message}"
-
-
-class GNewsItem(Item):
-    def __init__(self, sample_result: dict = {}):
-        self.title = sample_result.get("title", "An untitled article")
-        self.description = sample_result.get(
-            "description", "No description available")
-        self.date = sample_result.get("published date", "an unknown date")
-        self.publisher_name = sample_result.get(
-            "publisher", {}).get("title", "an unknown publisher")
-
-    def __str__(self):
-        return (
-            f"'{self.title}', published by {self.publisher_name} on {
-                self.date}, covers the following: {self.description}."
-        )
-
-
-class XKCDItem(Item):
-    def __init__(self, sample_result: dict = {}):
-        self.number = sample_result.get("number", "an unknown number")
-        self.title = sample_result.get("title", "An untitled comic")
-        self.alt_text = sample_result.get("altText", "No alt text available")
-        self.image_link = sample_result.get("imageLink", "No image available")
-        self.image_name = sample_result.get(
-            "imageName", "No image name available")
-        self.link = sample_result.get("link", "No link available")
-
-    def __str__(self):
-        return (
-            f"XKCD comic #{self.number}, titled '{
-                self.title}', can be viewed at {self.link}. "
-            f"The comic features an image named '{
-                self.image_name}', available at {self.image_link}. "
-            f"Alt text: '{self.alt_text}'."
-        )
+    ARXIV = 3
 
 
 class Recommender:
@@ -200,6 +255,7 @@ class Recommender:
         self.samplers = {
             SamplerType.GNEWS: GNewsSampler(),
             SamplerType.XKCD: XKCDSampler(),
+            SamplerType.ARXIV: ArxivSampler(),
         }
 
     def add_arm(self, arm: Arm):
