@@ -6,6 +6,7 @@ from backend import llm
 import os
 import sys
 import asyncio
+import copy
 
 testdir = os.path.dirname(__file__)
 srcdir = './frontend'
@@ -16,8 +17,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
 st.set_page_config(layout="wide")
 
-st.session_state.thread = initial_state.thread
-st.session_state.topics = initial_state.topics
+st.session_state.thread = copy.deepcopy(initial_state.thread)
+st.session_state.topics = copy.deepcopy(initial_state.topics)
 print("User action: Chat history initialized.")
 
 # Instantiating ML stuff
@@ -44,9 +45,8 @@ def run_recommendation_system():
 
 
 with col1:
-    st.session_state.thread = initial_state.thread
-    st.session_state.topics = initial_state.topics
-    st.header("AI Curator")
+    st.header("Fred")
+    st.subheader("Your friendly neighborhood AI Curator")
     # Display chat threads in a scrollable container
     chat_container = st.container(key="chat", height=400, border=False)
 
@@ -103,5 +103,12 @@ with col2:
     fig.update_layout(height=400)  # Set the height to be smaller
 
     st.plotly_chart(fig)
+
+if st.button("Refresh State"):
+    st.session_state.thread = copy.deepcopy(initial_state.thread)
+    st.session_state.topics = copy.deepcopy(initial_state.topics)
+    print("State refreshed")
+    st.rerun()
+
 
 run_recommendation_system()
