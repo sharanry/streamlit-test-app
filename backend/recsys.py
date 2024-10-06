@@ -39,6 +39,7 @@ class GNewsItem(Item):
         self.date = sample_result.get("published date", "an unknown date")
         self.publisher_name = sample_result.get(
             "publisher", {}).get("title", "an unknown publisher")
+        self.url = sample_result.get("url", "No url available")
 
     def __str__(self):
         return (
