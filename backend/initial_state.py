@@ -1,6 +1,6 @@
 from datetime import time
 
-from backend.recsys import Arm, ChatItem, Recommender, SamplerType
+from backend.recsys import Arm, ChatItem, GNewsItem, XKCDItem, Recommender, SamplerType
 
 # Convert the thread into ChatItem objects
 thread = [
@@ -13,10 +13,19 @@ thread = [
         {"sender": "User", "message": "I am also interested in news on Ukraine."}),
     ChatItem({"sender": "Assistant",
              "message": "I will send you a message whenever there is important news on Ukraine."}),
-    ChatItem({"sender": "Assistant",
-             "message": "Here is the weather for today: Temperature: 10°C, Humidity: 50%, Wind: 10 km/h, Rain: 10%."}),
-    ChatItem({"sender": "Assistant",
-             "message": "Here is the news for today: Ukraine News - Ukraine is in a state of war with Russia."})
+    GNewsItem({
+             "title": "Behind Trump’s Views on Ukraine: Putin’s Gambit and a Political Grudge",
+             "url": "https://www.nytimes.com/2024/10/05/us/politics/trump-putin-ukraine.html",
+             "description": "Behind Trump’s Views on Ukraine: Putin’s Gambit and a Political Grudge"
+             }),
+    XKCDItem({
+        "number": 959,
+        "title": "Caroling",
+        "altText": "This is a funny comic.",
+        "imageLink": "https://imgs.xkcd.com/comics/caroling.png",
+        # "image_name": "funny_comic",
+        "link": "https://xkcd.com/1234/"
+    })
 ]
 
 

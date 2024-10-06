@@ -32,23 +32,15 @@ llm = llm.ChatMistralAI(
 col1, col2 = st.columns([3, 2])
 
 
-def clear_input():
-    st.session_state.user_input = ""
-
-
 rec = initial_state.new_recommender()
 
-# @st.fragment(run_every=5)
-async def run_recommendation_system():
-    while True:
-        await asyncio.sleep(5)
-        print("Running recommendation system")
-        st.session_state.thread.append({"role": "AI", "message": "test"})
-        print(len(st.session_state.thread))
-        st.rerun(scope="chat")
-    # item = rec.sample()
-    # print(item)
-    # st.session_state.thread.append(item) 
+@st.fragment(run_every=5)
+def run_recommendation_system():
+    print("Polling recommendation system")
+    item = rec.sample()
+    st.session_state.thread.append(item) 
+    print(len(st.session_state.thread))
+    display_chat([item])
 
 
 with col1:
@@ -59,22 +51,22 @@ with col1:
     chat_container = st.container(key="chat", height=400, border=False)
 
     @st.fragment
-    def display_chat():
+    def display_chat(thread=st.session_state.thread):
         with chat_container:
-            for message in st.session_state.thread:
-                role = message["role"]
-                text = message["message"]
-                
+            for item in thread:            
+                # print(vars(item))    
                 if isinstance(item, recsys.GNewsItem):
-                    news = message["news"]
-                    with st.chat_message(item.sender, avatar="🗞️"):
-                        st.markdown(item.title)
-                        st.markdown(f"""**[{item.title}]({""})**
-                        {item.description}
-                        """)
+                    with st.chat_message("AI", avatar="🗞️"):
+                        st.markdown(f"""**[{item.title}]({item.url})**""")
+                        st.markdown(item.description)
+                if isinstance(item, recsys.XKCDItem):
+                    with st.chat_message("AI", avatar="😂"):
+                        st.markdown(f"**XKCD comic #{item.number}**")
+                        st.markdown(f"![{item.title}]({item.image_link})")
+                        # st.markdown(f"*{item.alt_text}*")
                 elif isinstance(item, recsys.ChatItem):
-                    with st.chat_message(role):
-                        st.markdown(text)
+                    with st.chat_message(item.sender):
+                        st.markdown(item.message)
 
     display_chat()
     @st.fragment
@@ -82,10 +74,10 @@ with col1:
         user_input = st.session_state.user_input
         print(F"User action: Sending message - {user_input}")
         if user_input:
-            message = {"sender": "User", "message": user_input}
-            st.session_state.thread.append(message)
-            print(f"User action: Message sent - {user_input}")
-            # clear_input()
+            item = recsys.ChatItem({"sender":"User", "message":user_input})
+            print(f"User action: Message sent - {item}")
+            st.session_state.thread.append(item)
+            display_chat([item])
     
     st.chat_input("Talk to your AI Curator", key="user_input", on_submit=send_message)
 
@@ -111,9 +103,5 @@ with col2:
     fig.update_layout(height=400)  # Set the height to be smaller
 
     st.plotly_chart(fig)
-<<<<<<< HEAD
-=======
 
-
-# asyncio.run(run_recommendation_system())
->>>>>>> b0bcb86 (sharan updates)
+run_recommendation_system()
